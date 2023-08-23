@@ -11,11 +11,10 @@ export enum OfferStatus {
   
 export type Toffer = {
     id: string,
-    buyerId: string,
-    tokenId: string,
-    amount: string,
-    buyerAddress: string,
+    sellerAddress: string,
+    tokenID: string,
+    value: string,
+    buyerAddress: any,
     offerType: offersTypes,
     status: OfferStatus
   };
-  
