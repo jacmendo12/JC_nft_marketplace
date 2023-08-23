@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
 import { OfferStatus, Toffer } from '../../shared/persistence/offer.persistence';
 import { uuidV4 } from 'web3-utils';
-import { log } from 'console';
-const axios = require('axios');
+import axios from 'axios';
 
 // import ERC20 from '../../shared/contracts/mockERC721ABI';
 // import Web3 from 'web3';
@@ -12,7 +11,7 @@ export async function createOffer(req: Request, res: Response): Promise<void> {
         const { tokenID, sellerAddress } = req.body
     
         /* validate if the user have this token */
-        const apiUrl = process.env.SEPOLIA_ETHERSCAN_URL;
+        const apiUrl = process.env.SEPOLIA_ETHERSCAN_URL || "";
         const contractAddress = process.env.ERC721_CONTRACT_ADDRESS;
         const walletAddress = sellerAddress;
         const apiKey = process.env.ETHERSCAN_API;
