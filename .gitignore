@@ -1,0 +1,9 @@
+#  Node.js generated folders
+node_modules/
+dist/
+
+# environment-specific files
+.env
+
+# Ignore other files 
+.DS_Store
