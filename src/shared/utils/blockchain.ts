@@ -120,8 +120,7 @@ export async function getBalanceERC20(address: string): Promise<any> {
 }
 
 export async function validateFound(balance1: number, balance2: number): Promise<void> {
-    const web3 = new Web3(process.env.INFURA_URL);
     if (web3.utils.fromWei(balance1, 'ether') <= web3.utils.fromWei(balance2, 'ether'))
-        throw new Error(`You not have funds for this token, the price is ${web3.utils.fromWei(balance2, 'ether')}`);
+        throw new Error(`You not have funds for this token`);
 
 }

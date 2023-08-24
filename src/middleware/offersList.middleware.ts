@@ -17,7 +17,7 @@ const sharedList:Toffer[] = [
       "sellerAddress": "0xe7D4Adf8ef90D2A2B5A325d02d4877533A297741",
       "tokenID": 172,
       "value": 1000, //1000000000000000000
-      "offerType": offersTypes.Buy
+      "offerType": offersTypes.Auctions
   }
 ];
 /* middleware is used for have the status of the offers  */

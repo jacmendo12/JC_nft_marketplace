@@ -57,7 +57,6 @@ export async function createOffer(req: Request, res: Response): Promise<void> {
         res.status(200).json({ message:"successful", data: newOffer });
     } catch (err: any) {
         console.log(err);
-
         res.status(400).json({ error: err.message || 'system error' });
     }
 }

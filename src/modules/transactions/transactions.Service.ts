@@ -30,18 +30,19 @@ export async function buyToken(req: Request, res: Response): Promise<void> {
 
 export async function auctions(req: Request, res: Response): Promise<void> {
     try {
-        const { tokenID, buyerAddress } = req.body
+        const { tokenID, buyerAddress,auctions } = req.body
         const token: Toffer = req.offersList.find((data) => data.tokenID == tokenID) as Toffer
 
         if (!token || token.status !== OfferStatus.Pending)
             throw new Error('token is not available');
 
         if (token.offerType !== offersTypes.Auctions)
-            throw new Error('This token is for Auctions');
+            throw new Error('This token is for Buy');
 
-        // validate if the user have founds 
+
+
         const balance = await blockchain.getBalanceERC20(buyerAddress)
-        blockchain.validateFound(balance, token?.value)
+        await blockchain.validateFound(balance, auctions)
 
 
         res.status(200).json({ message:"successful", data: req.offersList });
