@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { OfferStatus, Toffer } from '../../shared/persistence/offer.persistence';
+import { OfferStatus, Toffer, offersTypes } from '../../shared/persistence/offer.persistence';
 import { uuidV4 } from 'web3-utils';
 import axios from 'axios';
 
@@ -8,7 +8,7 @@ import axios from 'axios';
 
 export async function createOffer(req: Request, res: Response): Promise<void> {
     try {
-        const { tokenID, sellerAddress } = req.body
+        const { tokenID, sellerAddress, offerType } = req.body
     
         /* validate if the user have this token */
         const apiUrl = process.env.SEPOLIA_ETHERSCAN_URL || "";
@@ -38,10 +38,13 @@ export async function createOffer(req: Request, res: Response): Promise<void> {
             throw new Error('You not have this token');
 
          /* validate if the offer are in the list */
-        const nftList = req.offersList.find((data) => data.tokenID == tokenID)
-        if (nftList)
+        const token = req.offersList.find((data) => data.tokenID == tokenID)
+        if (token)
             throw new Error('Nft is offered now');
 
+        if (offerType == offersTypes.Buy){
+            console.log()
+        }
 
         const newOffer: Toffer = {
             id: uuidV4(),
@@ -51,7 +54,7 @@ export async function createOffer(req: Request, res: Response): Promise<void> {
         }
         req.offersList.push(newOffer)
 
-        res.status(200).json({ message: newOffer });
+        res.status(200).json({ message:"successful", data: newOffer });
     } catch (err: any) {
         console.log(err);
 

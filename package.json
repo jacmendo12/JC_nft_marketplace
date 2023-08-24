@@ -21,7 +21,7 @@
     "joi": "^17.9.2",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.1",
-    "web3": "^4.1.1",
+    "web3": "4.0.3",
     "web3-utils": "^4.0.3"
   },
   "devDependencies": {

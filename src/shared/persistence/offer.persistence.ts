@@ -4,16 +4,16 @@ export enum offersTypes {
   }
 
 export enum OfferStatus {
-    Accepted = 'accepted',
-    Pending = 'pending',
-    Rejected = 'rejected',
+    Accepted = 'Accepted',
+    Pending = 'Pending',
+    Rejected = 'Rejected',
 }
   
 export type Toffer = {
     id: string,
     sellerAddress: string,
-    tokenID: string,
-    value: string,
+    tokenID: number,
+    value: number,
     buyerAddress: any,
     offerType: offersTypes,
     status: OfferStatus
