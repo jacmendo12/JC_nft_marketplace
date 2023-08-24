@@ -14,7 +14,7 @@ export type Toffer = {
     sellerAddress: string,
     tokenID: number,
     value: number,
-    buyerAddress: any,
+    buyerData: any,
     offerType: offersTypes,
     status: OfferStatus
   };

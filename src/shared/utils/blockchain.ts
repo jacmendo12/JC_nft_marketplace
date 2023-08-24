@@ -25,7 +25,7 @@ export async function buyToken(token: Toffer, buyerAddress: string): Promise<any
 
         const block = await web3.eth.getBlock('latest');
         const gasLimit = Math.round(Number(block.gasLimit) / block.transactions.length);
-        const hashAproved = await AproveTransaction(token, buyerAddress, gasLimit)
+        const hashAproved = await AproveTransactionERC721(token, buyerAddress, gasLimit)
 
         let data = await erc20_contract.methods.transfer(token.sellerAddress, token.value).encodeABI();
         const transactionObjectErc20 = {
@@ -54,7 +54,7 @@ export async function buyToken(token: Toffer, buyerAddress: string): Promise<any
         console.log("SignedTransactionERC721>", SignedTransactionERC721)
 
         return {
-            "erc20Hash":SignedTransactionERC20.transactionHash,
+            "erc20Hash": SignedTransactionERC20.transactionHash,
             "erc721Hash": SignedTransactionERC721.transactionHash,
             "hashAproved": hashAproved
         }
@@ -65,7 +65,7 @@ export async function buyToken(token: Toffer, buyerAddress: string): Promise<any
 
 }
 
-export async function AproveTransaction(token: Toffer, buyerAddress: string, gasLimit: number): Promise<any> {
+export async function AproveTransactionERC721(token: Toffer, buyerAddress: string, gasLimit: number): Promise<any> {
     try {
         const privateKeyByAddress = PRIVAVE_KEYS.find((data: any) => data.addres == token.sellerAddress)
         await haveToken(token)
@@ -89,6 +89,41 @@ export async function AproveTransaction(token: Toffer, buyerAddress: string, gas
     }
 }
 
+export async function auctions(token: Toffer, buyerAddress: string, valueSpend: number, auctionsType: number = 1): Promise<any> {
+    try {
+        const privateKeyByAddress = PRIVAVE_KEYS.find((data: any) => data.addres == buyerAddress)
+        const block = await web3.eth.getBlock('latest');
+        const gasLimit = Math.round(Number(block.gasLimit) / block.transactions.length);
+
+        let data = ""
+        if (auctionsType == 1) // approve
+            data = await erc20_contract.methods.approve(buyerAddress, valueSpend).encodeABI();
+        else if (auctionsType == 2) // decreaseAllowance
+            data = await erc20_contract.methods.decreaseAllowance(buyerAddress, valueSpend).encodeABI();
+        else if (auctionsType == 3) // increaseAllowance
+            data = await erc20_contract.methods.increaseAllowance(buyerAddress, valueSpend).encodeABI();
+        else
+            throw new Error("Function is not valid");
+
+        const transactionObjectErc20 = {
+            from: buyerAddress,
+            to: ERC20_CONTRACT_ADDRESS,
+            gas: gasLimit,
+            gasPrice: await web3.eth.getGasPrice(),
+            data: data
+        };
+
+        console.log("transactionObjectErc20>", transactionObjectErc20)
+        const SignedTransactionER20 = await signature(transactionObjectErc20, privateKeyByAddress.privateKey)
+        console.log("SignedTransactionER20>", SignedTransactionER20)
+
+        return SignedTransactionER20.transactionHash
+    } catch (err: any) {
+        console.log(err)
+        throw new Error(err.reason || err.message || "Error to create auctions");
+    }
+}
+
 export async function signature(transactionObject: any, privateKeyByAddress: any): Promise<any> {
     try {
         const signedTransaction = await web3.eth.accounts.signTransaction(transactionObject, privateKeyByAddress);
@@ -96,6 +131,14 @@ export async function signature(transactionObject: any, privateKeyByAddress: any
         return sendSignedTransaction
     } catch (err: any) {
         throw new Error(err.reason || err.message || "Error to buy token");
+    }
+}
+
+export async function newAuctionsValue(address: string): Promise<any> {
+    try {
+        return await erc20_contract.methods.allowance(address, address).call()
+    } catch (err) {
+        throw new Error('Error AuctionsValue');
     }
 }
 
@@ -122,5 +165,4 @@ export async function getBalanceERC20(address: string): Promise<any> {
 export async function validateFound(balance1: number, balance2: number): Promise<void> {
     if (web3.utils.fromWei(balance1, 'ether') <= web3.utils.fromWei(balance2, 'ether'))
         throw new Error(`You not have funds for this token`);
-
 }
