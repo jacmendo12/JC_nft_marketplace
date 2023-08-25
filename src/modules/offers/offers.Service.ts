@@ -1,77 +1,76 @@
-import { Request, Response } from 'express';
-import { OfferStatus, Toffer, offersTypes } from '../../shared/persistence/offer.persistence';
-import { uuidV4 } from 'web3-utils';
-import axios from 'axios';
-import { buyOfferSchema } from './dto/offers.dto';
-import { handleValidationResult } from '../../shared/utils/utils';
-
-// import ERC20 from '../../shared/contracts/mockERC721ABI';
-// import Web3 from 'web3';
+import { Request, Response } from "express";
+import {
+  OfferStatus,
+  Toffer,
+  offersTypes,
+} from "../../shared/persistence/offer.persistence";
+import { uuidV4 } from "web3-utils";
+import axios from "axios";
+import { buyOfferSchema } from "./dto/offers.dto";
+import { handleValidationResult } from "../../shared/utils/utils";
 
 export async function createOffer(req: Request, res: Response): Promise<void> {
-    try {
-        const value = buyOfferSchema.validate(req.body);
-        handleValidationResult(value);
+  try {
+    const value = buyOfferSchema.validate(req.body);
+    handleValidationResult(value);
 
-        const { tokenID, sellerAddress, offerType } = req.body
-    
-        /* validate if the user have this token */
-        const apiUrl = process.env.SEPOLIA_ETHERSCAN_URL || "";
-        const contractAddress = process.env.ERC721_CONTRACT_ADDRESS;
-        const walletAddress = sellerAddress;
-        const apiKey = process.env.ETHERSCAN_API;
+    const { tokenID, sellerAddress, offerType } = req.body;
 
-        const response = await axios.get(apiUrl, {
-            params: {
-                module: 'account',
-                action: 'tokennfttx',
-                contractaddress: contractAddress,
-                address: walletAddress,
-                page: 1,
-                offset: 100,
-                startblock: 0,
-                endblock: 99999999,
-                sort: 'asc',
-                apikey: apiKey,
-            },
-        });
+    /* validate if the user have this token */
+    const apiUrl = process.env.SEPOLIA_ETHERSCAN_URL || "";
+    const contractAddress = process.env.ERC721_CONTRACT_ADDRESS;
+    const walletAddress = sellerAddress;
+    const apiKey = process.env.ETHERSCAN_API;
 
-        const { data: { result } } = response;
+    const response = await axios.get(apiUrl, {
+      params: {
+        module: "account",
+        action: "tokennfttx",
+        contractaddress: contractAddress,
+        address: walletAddress,
+        page: 1,
+        offset: 100,
+        startblock: 0,
+        endblock: 99999999,
+        sort: "asc",
+        apikey: apiKey,
+      },
+    });
 
-        const nffAvaible = result.find((data: any) => data.tokenID == tokenID)
-        if (!nffAvaible)
-            throw new Error('You not have this token');
+    const {
+      data: { result },
+    } = response;
 
-         /* validate if the offer are in the list */
-        const token = req.offersList.find((data) => data.tokenID == tokenID)
-        if (token)
-            throw new Error('Nft is offered now');
+    const nffAvaible = result.find((data: any) => data.tokenID == tokenID);
+    if (!nffAvaible) throw new Error("You not have this token");
 
-        if (offerType == offersTypes.Buy){
-            console.log()
-        }
+    /* validate if the offer are in the list */
+    const token = req.offersList.find((data) => data.tokenID == tokenID);
+    if (token) throw new Error("Nft is offered now");
 
-        const newOffer: Toffer = {
-            id: uuidV4(),
-            status: OfferStatus.Pending,
-            buyerAddress: [],
-            ...req.body
-        }
-        req.offersList.push(newOffer)
-
-        res.status(200).json({ message:"successful", data: newOffer });
-    } catch (err: any) {
-        console.log(err);
-        res.status(400).json({ error: err.message || 'system error' });
+    if (offerType == offersTypes.Buy) {
+      console.log();
     }
-}
 
+    const newOffer: Toffer = {
+      id: uuidV4(),
+      status: OfferStatus.Pending,
+      buyerAddress: [],
+      ...req.body,
+    };
+    req.offersList.push(newOffer);
+
+    res.status(200).json({ message: "successful", data: newOffer });
+  } catch (err: any) {
+    console.log(err);
+    res.status(400).json({ error: err.message || "system error" });
+  }
+}
 
 export async function list_offers(req: Request, res: Response): Promise<void> {
-    try {
-        res.status(200).json({ message: req.offersList });
-    } catch (err: any) {
-        res.status(400).json({ error: err.message || 'system error' });
-    }
+  try {
+    res.status(200).json({ message: req.offersList });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message || "system error" });
+  }
 }
-
