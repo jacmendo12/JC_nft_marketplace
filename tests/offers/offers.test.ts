@@ -5,9 +5,6 @@ import {
   offersTypes,
 } from "../../src/shared/persistence/offer.persistence";
 import * as blockchain from '../../src/shared/utils/blockchain';
-import { buyOfferSchema } from '../../src/modules/offers/dto/offers.dto';
-import { Request } from 'express';
-import { error } from 'console';
 
 declare module 'express' {
   interface Request {
