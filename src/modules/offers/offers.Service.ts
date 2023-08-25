@@ -8,6 +8,7 @@ import { uuidV4 } from "web3-utils";
 import { buyOfferSchema } from "./dto/offers.dto";
 import { handleValidationResult } from "../../shared/utils/utils";
 import * as blockchain from "../../shared/utils/blockchain";
+import * as readContract from "../../shared/utils/readContract";
 
 export async function createOffer(req: Request, res: Response): Promise<void> {
   try {
@@ -20,7 +21,7 @@ export async function createOffer(req: Request, res: Response): Promise<void> {
       sellerAddress,
       tokenID
     }
-    await blockchain.haveToken(token)
+    await readContract.haveToken(token)
 
     /* validate if the offer are in the list */
     const tokenFind = req.offersList.find((data) => data.tokenID == tokenID);

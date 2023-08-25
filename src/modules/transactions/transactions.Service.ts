@@ -6,6 +6,8 @@ import {
   offersTypes,
 } from "../../shared/persistence/offer.persistence";
 import * as blockchain from "../../shared/utils/blockchain";
+import * as readContract from "../../shared/utils/readContract";
+
 import { uuidV4 } from "web3-utils";
 import { buyTokenSchema, auctionsSchema } from "./dto/transactions.dto";
 import { handleValidationResult } from "../../shared/utils/utils";
@@ -27,8 +29,8 @@ export async function buyToken(req: Request, res: Response): Promise<void> {
       throw new Error("This token is for Auctions");
 
     // validate if the user have founds
-    const balance = await blockchain.getBalanceERC20(buyerAddress);
-    await blockchain.validateFound(balance, token?.value);
+    const balance = await readContract.getBalanceERC20(buyerAddress);
+    await readContract.validateFound(balance, token?.value);
 
     const hash = await blockchain.buyToken(token, buyerAddress);
     const index = req.offersList.findIndex((data) => data.tokenID == tokenID);
@@ -65,15 +67,15 @@ export async function auctions(req: Request, res: Response): Promise<void> {
     if (token.offerType !== offersTypes.Auctions)
       throw new Error("This token is for Buy");
 
-    const balance = await blockchain.getBalanceERC20(buyerAddress);
-    await blockchain.validateFound(balance, auctionsValue);
+    const balance = await readContract.getBalanceERC20(buyerAddress);
+    await readContract.validateFound(balance, auctionsValue);
     const hash = await blockchain.auctions(
       token,
       buyerAddress,
       auctionsValue,
       auctionsType,
     );
-    const newAuctionsValue = await blockchain.newAuctionsValue(buyerAddress);
+    const newAuctionsValue = await readContract.newAuctionsValue(buyerAddress);
     console.log(newAuctionsValue);
 
     const index = req.offersList.findIndex((data) => data.tokenID == tokenID);

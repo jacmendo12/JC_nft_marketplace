@@ -1,8 +1,15 @@
 import { Request, Response } from "express";
 import { Toffer, OfferStatus, offersTypes } from "../../src/shared/persistence/offer.persistence";
 import * as blockchain from '../../src/shared/utils/blockchain';
+import * as readContract from '../../src/shared/utils/readContract';
+
 import { auctions } from "../../src/modules/transactions/transactions.Service"; // Asegúrate de importar correctamente la función auctions
 
+declare module 'express' {
+    interface Request {
+      offersList?: any[]; // Ajusta el tipo según tus necesidades
+    }
+  }
 
 describe("auctions", () => {
     const mockReq: Partial<Request> = {}; // Crear un mock de Request
@@ -34,10 +41,10 @@ describe("auctions", () => {
     });
 
     it("error", async () => {
-        const blockchainHaveTokenMock = jest.spyOn(blockchain, 'getBalanceERC20');
+        const blockchainHaveTokenMock = jest.spyOn(readContract, 'getBalanceERC20');
         blockchainHaveTokenMock.mockResolvedValueOnce(1000);
 
-        const mockValidateFound = jest.spyOn(blockchain, 'validateFound');
+        const mockValidateFound = jest.spyOn(readContract, 'validateFound');
         mockValidateFound.mockResolvedValueOnce(undefined);
 
         const mockAuctions = jest.spyOn(blockchain, 'auctions');
@@ -46,7 +53,7 @@ describe("auctions", () => {
         const mockNewAuctionsValue = jest.spyOn(blockchain, 'auctions');
         mockNewAuctionsValue.mockResolvedValueOnce("2000");
 
-        // call function auctions
+        // // call function auctions
         await auctions(mockReq as Request, mockRes as Response);
         expect(mockRes.status).toHaveBeenCalledWith(400);
       

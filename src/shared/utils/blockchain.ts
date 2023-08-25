@@ -1,6 +1,8 @@
 import { Toffer, TauctionData } from "../persistence/offer.persistence";
 import Web3 from "web3";
 import dotenv from "dotenv";
+import * as readContract from "./readContract";
+
 dotenv.config();
 
 import marketplace_ABI from "../contracts/marketPlaceABI";
@@ -99,7 +101,7 @@ export async function AproveTransactionERC721(
     const privateKeyByAddress = PRIVAVE_KEYS.find(
       (data: any) => data.addres == token.sellerAddress,
     );
-    await haveToken(token);
+    await readContract.haveToken(token);
     console.log("---Aprobe token---");
     const data = await erc721_contract.methods
       .approve(buyerAddress, token.tokenID)
@@ -219,13 +221,13 @@ export async function finishAuction(
       (data: any) => data.addres == buyerAddress,
     );
 
-    const message = await createMessageHash(
+    const message = await readContract.createMessageHash(
       auctionData.collectionAddress,
       auctionData.erc20Address,
       auctionData.tokenId,
       auctionData.bid,
     );
-    const ownerApprovedSig = await signatureData(
+    const ownerApprovedSig = await readContract.signatureData(
       message,
       privateKeyByBuyer.privateKey,
     );
@@ -260,74 +262,4 @@ export async function finishAuction(
     throw new Error(err.reason || err.message || "Error to buy token");
   }
 }
-
-export async function newAuctionsValue(address: string): Promise<any> {
-  try {
-    return await erc20_contract.methods.allowance(address, address).call();
-  } catch (err) {
-    throw new Error("Error AuctionsValue");
-  }
-}
-
-export async function haveToken(token: Toffer): Promise<any> {
-  try {
-    const balance = await erc721_contract.methods.ownerOf(token.tokenID).call();
-    if (balance != token.sellerAddress)
-      throw new Error("it is not your token ");
-    return balance;
-  } catch (err) {
-    throw new Error("Error balance");
-  }
-}
-
-export async function getBalanceERC20(address: string): Promise<any> {
-  try {
-    const balance = await erc20_contract.methods.balanceOf(address).call();
-    return balance;
-  } catch (err) {
-    throw new Error("Error balance");
-  }
-}
-
-export async function validateFound(
-  balance1: number,
-  balance2: number,
-): Promise<void> {
-  if (
-    web3.utils.fromWei(balance1, "ether") <=
-    web3.utils.fromWei(balance2, "ether")
-  )
-    throw new Error(`You not have funds for this token`);
-}
-
-export async function signatureData(
-  messageHash: string,
-  privateKey: string,
-): Promise<string> {
-  const signedMessage = await web3.eth.accounts.sign(messageHash, privateKey);
-  console.log(signedMessage);
-  return signedMessage.signature;
-}
-
-export function createBidderHash(bidderSig: string): string {
-  const bidMessageHash = web3.utils.soliditySha3(bidderSig);
-  if (!bidMessageHash)
-    throw new Error("Bid message hash could not be generated.");
-  return bidMessageHash;
-}
-
-export function createMessageHash(
-  collectionAddress: string,
-  erc20Address: string,
-  tokenId: string,
-  bid: number,
-): string {
-  const bidMessageHash = web3.utils.soliditySha3(
-    { type: "address", value: collectionAddress },
-    { type: "address", value: erc20Address },
-    { type: "uint256", value: tokenId },
-    { type: "uint256", value: bid },
-  );
-  if (!bidMessageHash) throw new Error("message have not generated");
-  return bidMessageHash;
-}
+ 

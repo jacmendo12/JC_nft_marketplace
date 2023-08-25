@@ -5,7 +5,7 @@ import {
   offersTypes,
 } from "../../src/shared/persistence/offer.persistence";
 import * as blockchain from '../../src/shared/utils/blockchain';
-
+import * as readContract from '../../src/shared/utils/readContract';
 declare module 'express' {
   interface Request {
     offersList?: any[]; // Ajusta el tipo según tus necesidades
@@ -38,7 +38,7 @@ describe('createOffer', () => {
     mockReq.offersList = mockOffersList;
     const mockRes = createMockResponse();
 
-    const blockchainHaveTokenMock = jest.spyOn(blockchain, 'haveToken');
+    const blockchainHaveTokenMock = jest.spyOn(readContract, 'haveToken');
     blockchainHaveTokenMock.mockRejectedValue(new Error("error"));
 
     await createOffer(mockReq, mockRes);
@@ -57,7 +57,7 @@ describe('createOffer', () => {
     mockReq.offersList = mockOffersList;
     const mockRes = createMockResponse();
 
-    const blockchainHaveTokenMock = jest.spyOn(blockchain, 'haveToken');
+    const blockchainHaveTokenMock = jest.spyOn(readContract, 'haveToken');
     blockchainHaveTokenMock.mockResolvedValueOnce("ok"); // Resuelve con éxito
 
     await createOffer(mockReq, mockRes);
@@ -86,7 +86,7 @@ describe('createOffer', () => {
     mockReq.offersList = mockOffersList;
     const mockRes = createMockResponse();
 
-    const blockchainHaveTokenMock = jest.spyOn(blockchain, 'haveToken');
+    const blockchainHaveTokenMock = jest.spyOn(readContract, 'haveToken');
     blockchainHaveTokenMock.mockResolvedValueOnce("ok"); // Resuelve con éxito
 
     await createOffer(mockReq, mockRes);
