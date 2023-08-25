@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { OfferStatus, Toffer, offersTypes } from '../../shared/persistence/offer.persistence';
+import { OfferStatus, TauctionData, Toffer, offersTypes } from '../../shared/persistence/offer.persistence';
 import * as blockchain from '../../shared/utils/blockchain';
 import { uuidV4 } from 'web3-utils';
 
@@ -53,10 +53,9 @@ export async function auctions(req: Request, res: Response): Promise<void> {
         console.log(newAuctionsValue);
 
         const index = req.offersList.findIndex((data) => data.tokenID == tokenID)
-        const indexAddress = req.offersList[index].buyerData.findIndex((data:any) => (data.buyerAddress === buyerAddress && data.status === OfferStatus.Pending))
-        
-        if (indexAddress > 0) 
-            req.offersList[index].buyerData[indexAddress].status = OfferStatus.Rejected;
+        const indexAddress = req.offersList[index].buyerData.findIndex((data: any) => (data.buyerAddress === buyerAddress && data.status === OfferStatus.Pending))
+        if (indexAddress >= 0)
+            req.offersList[index].buyerData[indexAddress].status = OfferStatus.Changed;
 
         req.offersList[index].buyerData.push({
             "uuid": uuidV4(),
@@ -77,11 +76,39 @@ export async function auctions(req: Request, res: Response): Promise<void> {
 
 export async function aproveTransaction(req: Request, res: Response): Promise<void> {
     try {
+        const { tokenID, sellerAddress, auctionId } = req.body
+        const token: Toffer = req.offersList.find((data) => data.tokenID == tokenID) as Toffer
+
+        if (!token || token.status !== OfferStatus.Pending)
+            throw new Error('token is not available');
+
+        if (token.sellerAddress !== sellerAddress)
+            throw new Error('sellerAddress is not same');
 
 
+        const index = req.offersList.findIndex((data) => data.tokenID == tokenID)
+        const indexAddress = req.offersList[index].buyerData.findIndex((data: any) => (data.uuid === auctionId && data.status === OfferStatus.Pending))
+        console.log(indexAddress)
+        if (indexAddress < 0)
+            throw new Error('Error: is posible than the auctionId was wrong');
+        const buyerInfo = req.offersList[index].buyerData[indexAddress]
+        // const AproveTransactionHash = await blockchain.AproveTransactionERC721(token,buyerInfo.buyerAddress)
+        // req.offersList[index].buyerData[indexAddress].AproveTransactionHash = AproveTransactionHash;
+
+        const auctionData: TauctionData = {
+            collectionAddress: "",
+            erc20Address: "",
+            tokenId: tokenID,
+            bid: 500,
+        }
+        const buyerAddress = req.offersList[index].buyerData[indexAddress].buyerAddress
+
+        const hashFinishAuction = await blockchain.finishAuction(sellerAddress, buyerAddress , buyerInfo.auctionsHash, buyerInfo.AproveTransactionHash, auctionData)
+
+        console.log(hashFinishAuction);
 
 
-        res.status(200).json({ message: "successful", data: req.offersList });
+        res.status(200).json({ message: "successful", data: req.offersList[index] });
     } catch (err: any) {
         res.status(400).json({ error: err.message || 'system error' });
     }

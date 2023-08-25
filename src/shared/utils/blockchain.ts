@@ -1,4 +1,4 @@
-import { Toffer } from '../persistence/offer.persistence';
+import { Toffer, TauctionData } from '../persistence/offer.persistence';
 import Web3 from 'web3';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -10,12 +10,13 @@ import ERC721_ABI from '../contracts/mockERC721ABI';
 
 const ERC20_CONTRACT_ADDRESS = process.env.ERC20_CONTRACT_ADDRESS;
 const ERC721_CONTRACT_ADDRESS = process.env.ERC721_CONTRACT_ADDRESS;
-const SEPOLIA_CONTRACT_MARKETPLACE_ADDRESS = process.env.SEPOLIA_CONTRACT_MARKETPLACE_ADDRESS;
+const SETTLER_CONTRACT_MARKETPLACE_ADDRESS = process.env.SETTLER_CONTRACT_MARKETPLACE_ADDRESS;
 const PRIVAVE_KEYS = JSON.parse(process.env.PRIVAVE_KEYS as string)
 
 const web3 = new Web3(process.env.INFURA_URL);
 const erc20_contract = new web3.eth.Contract(ERC20_ABI, ERC20_CONTRACT_ADDRESS);
 const erc721_contract = new web3.eth.Contract(ERC721_ABI, ERC721_CONTRACT_ADDRESS);
+const marketplace_contract = new web3.eth.Contract(marketplace_ABI, SETTLER_CONTRACT_MARKETPLACE_ADDRESS);
 
 export async function buyToken(token: Toffer, buyerAddress: string): Promise<any> {
     try {
@@ -25,7 +26,7 @@ export async function buyToken(token: Toffer, buyerAddress: string): Promise<any
 
         const block = await web3.eth.getBlock('latest');
         const gasLimit = Math.round(Number(block.gasLimit) / block.transactions.length);
-        const hashAproved = await AproveTransactionERC721(token, buyerAddress, gasLimit)
+        const hashAproved = await AproveTransactionERC721(token, buyerAddress)
 
         let data = await erc20_contract.methods.transfer(token.sellerAddress, token.value).encodeABI();
         const transactionObjectErc20 = {
@@ -65,8 +66,10 @@ export async function buyToken(token: Toffer, buyerAddress: string): Promise<any
 
 }
 
-export async function AproveTransactionERC721(token: Toffer, buyerAddress: string, gasLimit: number): Promise<any> {
+export async function AproveTransactionERC721(token: Toffer, buyerAddress: string): Promise<any> {
     try {
+        const block = await web3.eth.getBlock('latest');
+        const gasLimit = Math.round(Number(block.gasLimit) / block.transactions.length);
         const privateKeyByAddress = PRIVAVE_KEYS.find((data: any) => data.addres == token.sellerAddress)
         await haveToken(token)
         console.log("---Aprobe token---")
@@ -97,11 +100,11 @@ export async function auctions(token: Toffer, buyerAddress: string, valueSpend: 
 
         let data = ""
         if (auctionsType == 1) // approve
-            data = await erc20_contract.methods.approve(buyerAddress, valueSpend).encodeABI();
+            data = await erc20_contract.methods.approve(token.sellerAddress, valueSpend).encodeABI();
         else if (auctionsType == 2) // decreaseAllowance
-            data = await erc20_contract.methods.decreaseAllowance(buyerAddress, valueSpend).encodeABI();
+            data = await erc20_contract.methods.decreaseAllowance(token.sellerAddress, valueSpend).encodeABI();
         else if (auctionsType == 3) // increaseAllowance
-            data = await erc20_contract.methods.increaseAllowance(buyerAddress, valueSpend).encodeABI();
+            data = await erc20_contract.methods.increaseAllowance(token.sellerAddress, valueSpend).encodeABI();
         else
             throw new Error("Function is not valid");
 
@@ -130,6 +133,45 @@ export async function signature(transactionObject: any, privateKeyByAddress: any
         const sendSignedTransaction = await web3.eth.sendSignedTransaction(signedTransaction.rawTransaction);
         return sendSignedTransaction
     } catch (err: any) {
+        throw new Error(err.reason || err.message || "Error to buy token");
+    }
+}
+
+export async function finishAuction(sellerAddress: string, buyerAddress: string, bidderHash: string, ownerApprovedHash: string, auctionData: TauctionData): Promise<any> {
+    try {
+        auctionData.collectionAddress = ERC721_CONTRACT_ADDRESS || ""
+        auctionData.erc20Address = ERC20_CONTRACT_ADDRESS || ""
+        const block = await web3.eth.getBlock('latest');
+        const gasLimit = Math.round(Number(block.gasLimit) / block.transactions.length);
+        const privateKeyBySeller = PRIVAVE_KEYS.find((data: any) => data.addres == sellerAddress)
+        const privateKeyByBuyer = PRIVAVE_KEYS.find((data: any) => data.addres == buyerAddress)
+
+        const bidderSig = await transactionSignature(bidderHash, privateKeyBySeller.privateKey)
+        const ownerApprovedSig = await transactionSignature(ownerApprovedHash, privateKeyBySeller.privateKey)
+        const data = await marketplace_contract.methods.finishAuction(auctionData, bidderSig, ownerApprovedSig).encodeABI();
+        console.log(auctionData)
+        const transactionObjectFinishAuction = {
+            from: buyerAddress,
+            to: SETTLER_CONTRACT_MARKETPLACE_ADDRESS,
+            gas: gasLimit,
+            gasPrice: await web3.eth.getGasPrice(),
+            data: data
+        };
+        console.log("transactionObjectFinishAuction>", transactionObjectFinishAuction)
+
+        console.log(auctionData)
+        console.log(bidderSig)
+        console.log(ownerApprovedSig)
+
+        console.log(bidderHash)
+        console.log(ownerApprovedHash)
+        const SignedTransactionFinishAuction = await signature(transactionObjectFinishAuction, privateKeyByBuyer.privateKey)
+        console.log("SignedTransactionFinishAuction>", SignedTransactionFinishAuction)
+
+        return SignedTransactionFinishAuction.transactionHash
+        return 1
+    } catch (err: any) {
+        console.log(err)
         throw new Error(err.reason || err.message || "Error to buy token");
     }
 }
@@ -166,3 +208,11 @@ export async function validateFound(balance1: number, balance2: number): Promise
     if (web3.utils.fromWei(balance1, 'ether') <= web3.utils.fromWei(balance2, 'ether'))
         throw new Error(`You not have funds for this token`);
 }
+
+export async function transactionSignature(messageHash: string, privateKey: string): Promise<string> {
+    const signedMessage = await web3.eth.accounts.sign(messageHash, privateKey);
+    console.log(signedMessage)
+    return signedMessage.signature;
+}
+
+
