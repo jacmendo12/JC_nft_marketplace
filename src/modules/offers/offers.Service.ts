@@ -5,9 +5,9 @@ import {
   offersTypes,
 } from "../../shared/persistence/offer.persistence";
 import { uuidV4 } from "web3-utils";
-import axios from "axios";
 import { buyOfferSchema } from "./dto/offers.dto";
 import { handleValidationResult } from "../../shared/utils/utils";
+import * as blockchain from "../../shared/utils/blockchain";
 
 export async function createOffer(req: Request, res: Response): Promise<void> {
   try {
@@ -16,37 +16,15 @@ export async function createOffer(req: Request, res: Response): Promise<void> {
 
     const { tokenID, sellerAddress, offerType } = req.body;
 
-    /* validate if the user have this token */
-    const apiUrl = process.env.SEPOLIA_ETHERSCAN_URL || "";
-    const contractAddress = process.env.ERC721_CONTRACT_ADDRESS;
-    const walletAddress = sellerAddress;
-    const apiKey = process.env.ETHERSCAN_API;
-
-    const response = await axios.get(apiUrl, {
-      params: {
-        module: "account",
-        action: "tokennfttx",
-        contractaddress: contractAddress,
-        address: walletAddress,
-        page: 1,
-        offset: 100,
-        startblock: 0,
-        endblock: 99999999,
-        sort: "asc",
-        apikey: apiKey,
-      },
-    });
-
-    const {
-      data: { result },
-    } = response;
-
-    const nffAvaible = result.find((data: any) => data.tokenID == tokenID);
-    if (!nffAvaible) throw new Error("You not have this token");
+    const token: any = {
+      sellerAddress,
+      tokenID
+    }
+    await blockchain.haveToken(token)
 
     /* validate if the offer are in the list */
-    const token = req.offersList.find((data) => data.tokenID == tokenID);
-    if (token) throw new Error("Nft is offered now");
+    const tokenFind = req.offersList.find((data) => data.tokenID == tokenID);
+    if (tokenFind) throw new Error("Nft is offered now");
 
     if (offerType == offersTypes.Buy) {
       console.log();
