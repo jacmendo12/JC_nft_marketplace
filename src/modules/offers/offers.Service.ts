@@ -2,12 +2,17 @@ import { Request, Response } from 'express';
 import { OfferStatus, Toffer, offersTypes } from '../../shared/persistence/offer.persistence';
 import { uuidV4 } from 'web3-utils';
 import axios from 'axios';
+import { buyOfferSchema } from './dto/offers.dto';
+import { handleValidationResult } from '../../shared/utils/utils';
 
 // import ERC20 from '../../shared/contracts/mockERC721ABI';
 // import Web3 from 'web3';
 
 export async function createOffer(req: Request, res: Response): Promise<void> {
     try {
+        const value = buyOfferSchema.validate(req.body);
+        handleValidationResult(value);
+
         const { tokenID, sellerAddress, offerType } = req.body
     
         /* validate if the user have this token */

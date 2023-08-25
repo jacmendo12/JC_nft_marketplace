@@ -2,9 +2,14 @@ import { Request, Response } from 'express';
 import { OfferStatus, TauctionData, Toffer, offersTypes } from '../../shared/persistence/offer.persistence';
 import * as blockchain from '../../shared/utils/blockchain';
 import { uuidV4 } from 'web3-utils';
+import { buyTokenSchema, auctionsSchema } from './dto/transactions.dto';
+import { handleValidationResult } from '../../shared/utils/utils';
 
 export async function buyToken(req: Request, res: Response): Promise<void> {
     try {
+        const value = buyTokenSchema.validate(req.body);
+        handleValidationResult(value);
+
         const { tokenID, buyerAddress } = req.body
         const token: Toffer = req.offersList.find((data) => data.tokenID == tokenID) as Toffer
 
@@ -37,6 +42,9 @@ export async function buyToken(req: Request, res: Response): Promise<void> {
 
 export async function auctions(req: Request, res: Response): Promise<void> {
     try {
+        const value = auctionsSchema.validate(req.body);
+        handleValidationResult(value);
+        
         const { tokenID, buyerAddress, auctionsValue, auctionsType } = req.body
         const token: Toffer = req.offersList.find((data) => data.tokenID == tokenID) as Toffer
 
