@@ -1,9 +1,5 @@
 # JC_nft_marketplace
 
-Express Backend that uses Ethers.js to interact with an NFT Marketplace contract
-
-
-https://www.postman.com/solar-water-714478/workspace/jc-marketplace-nft/overview
 ## Description:
 
 Create a basic Node.js backend server that maintains a list of listings in memory. This server will offer these listings via a REST API, enabling users to connect, negotiate terms through bidding, and ultimately execute secure trades using the Settler contract.
@@ -49,10 +45,9 @@ OFFERS
 	1. For save the addres information you must use this estructure [{"addres":"","privateKey":""},{}...{}]
 3. npm run start
 
-
- 
 ## Notes
 
 - The api will run on the port 3000
+- We utilize the Sepolia service provided by Infura to interact with the Ethereum blockchain via the Web3 library.
 - In the section endpoint you could find the link to [Postman](https://www.postman.com/solar-water-714478/workspace/jc-marketplace-nft/overview) .
-- I also added some testings to check the flow
+- I've also integrated testing procedures to verify the workflow.
