@@ -75,19 +75,20 @@ export async function signatureData(
 
 export function createBidderHash(bidderSig: string): string {
   const bidMessageHash = web3.utils.soliditySha3(bidderSig);
+  console.log(".....")
   if (!bidMessageHash)
     throw new Error("Bid message hash could not be generated.");
   return bidMessageHash;
 }
 
 export function createMessageHash(
-  collectionAddress: string,
+  erc721Address: string,
   erc20Address: string,
   tokenId: string,
   bid: number,
 ): string {
   const bidMessageHash = web3.utils.soliditySha3(
-    { type: "address", value: collectionAddress },
+    { type: "address", value: erc721Address },
     { type: "address", value: erc20Address },
     { type: "uint256", value: tokenId },
     { type: "uint256", value: bid },

@@ -134,29 +134,30 @@ export async function auctions(
   auctionsType: number = 1,
 ): Promise<any> {
   try {
-    const privateKeyByAddress = PRIVAVE_KEYS.find(
-      (data: any) => data.addres == buyerAddress,
-    );
     const block = await web3.eth.getBlock("latest");
     const gasLimit = Math.round(
       Number(block.gasLimit) / block.transactions.length,
     );
 
+    const privateKeyByAddress = PRIVAVE_KEYS.find(
+      (data: any) => data.addres == buyerAddress,
+    );
+    console.log(privateKeyByAddress)
     let data = "";
     if (auctionsType == 1)
       // approve
       data = await erc20_contract.methods
-        .approve(token.sellerAddress, valueSpend)
+        .approve(buyerAddress, valueSpend)
         .encodeABI();
     else if (auctionsType == 2)
       // decreaseAllowance
       data = await erc20_contract.methods
-        .decreaseAllowance(token.sellerAddress, valueSpend)
+        .decreaseAllowance(buyerAddress, valueSpend)
         .encodeABI();
     else if (auctionsType == 3)
       // increaseAllowance
       data = await erc20_contract.methods
-        .increaseAllowance(token.sellerAddress, valueSpend)
+        .increaseAllowance(buyerAddress, valueSpend)
         .encodeABI();
     else throw new Error("Function is not valid");
 
@@ -220,46 +221,43 @@ export async function finishAuction(
     const privateKeyByBuyer = PRIVAVE_KEYS.find(
       (data: any) => data.addres == buyerAddress,
     );
-
     const message = await readContract.createMessageHash(
       auctionData.collectionAddress,
       auctionData.erc20Address,
       auctionData.tokenId,
       auctionData.bid,
     );
-    const ownerApprovedSig = await readContract.signatureData(
+    const bidderSig = await readContract.signatureData(
       message,
       privateKeyByBuyer.privateKey,
+      );
+
+    const BidderHash = readContract.createBidderHash(bidderSig) 
+
+    const ownerApprovedSig = await readContract.signatureData(
+      BidderHash,
+      BidderHash,
     );
-    // const bidderSig = await signatureData(bidderHash, privateKeyByBuyer.privateKey)
-    console.log(auctionData);
 
-    // // const ownerApprovedSig = await transactionSignature(ownerApprovedHash, privateKeyBySeller.privateKey)
-    // const data = await marketplace_contract.methods.finishAuction(auctionData, bidderSig, ownerApprovedSig).encodeABI();
-    // console.log(auctionData)
-    // const transactionObjectFinishAuction = {
-    //     from: buyerAddress,
-    //     to: SETTLER_CONTRACT_MARKETPLACE_ADDRESS,
-    //     gas: gasLimit,
-    //     gasPrice: await web3.eth.getGasPrice(),
-    //     data: data
-    // };
-    // console.log("transactionObjectFinishAuction>", transactionObjectFinishAuction)
 
-    // // console.log(auctionData)
-    // // console.log(bidderSig)
-    console.log(ownerApprovedSig);
+    const data = await marketplace_contract.methods.finishAuction(auctionData, bidderSig, ownerApprovedSig).encodeABI();
 
-    // // console.log(bidderHash)
-    // // console.log(ownerApprovedHash)
-    // const SignedTransactionFinishAuction = await signature(transactionObjectFinishAuction, privateKeyByBuyer.privateKey)
-    // console.log("SignedTransactionFinishAuction>", SignedTransactionFinishAuction)
+    const transactionObjectFinishAuction = {
+        from: buyerAddress,
+        to: SETTLER_CONTRACT_MARKETPLACE_ADDRESS,
+        gas: gasLimit,
+        gasPrice: await web3.eth.getGasPrice(),
+        data: data
+    };
+    console.log("transactionObjectFinishAuction>", transactionObjectFinishAuction)
+    const SignedTransactionFinishAuction = await signature(transactionObjectFinishAuction, privateKeyByBuyer.privateKey)
+    console.log("SignedTransactionFinishAuction>", SignedTransactionFinishAuction)
 
-    // return SignedTransactionFinishAuction.transactionHash
-    return 1;
+    return SignedTransactionFinishAuction.transactionHash
   } catch (err: any) {
     console.log(err);
     throw new Error(err.reason || err.message || "Error to buy token");
   }
 }
- 
+
+

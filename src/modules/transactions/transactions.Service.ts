@@ -131,14 +131,14 @@ export async function aproveTransaction(
     if (indexAddress < 0)
       throw new Error("Error: is posible than the auctionId was wrong");
     const buyerInfo = req.offersList[index].buyerData[indexAddress];
-    // const AproveTransactionHash = await blockchain.AproveTransactionERC721(token,buyerInfo.buyerAddress)
-    // req.offersList[index].buyerData[indexAddress].AproveTransactionHash = AproveTransactionHash;
+    const AproveTransactionHash = await blockchain.AproveTransactionERC721(token,buyerInfo.buyerAddress)
+    req.offersList[index].buyerData[indexAddress].AproveTransactionHash = AproveTransactionHash;
 
     const auctionData: TauctionData = {
       collectionAddress: "",
       erc20Address: "",
       tokenId: tokenID,
-      bid: 500,
+      bid: token.value,
     };
     const buyerAddress =
       req.offersList[index].buyerData[indexAddress].buyerAddress;
