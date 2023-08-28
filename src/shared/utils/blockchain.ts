@@ -147,17 +147,17 @@ export async function auctions(
     if (auctionsType == 1)
       // approve
       data = await erc20_contract.methods
-        .approve(buyerAddress, valueSpend)
+        .approve(token.sellerAddress, valueSpend)
         .encodeABI();
     else if (auctionsType == 2)
       // decreaseAllowance
       data = await erc20_contract.methods
-        .decreaseAllowance(buyerAddress, valueSpend)
+        .decreaseAllowance(token.sellerAddress, valueSpend)
         .encodeABI();
     else if (auctionsType == 3)
       // increaseAllowance
       data = await erc20_contract.methods
-        .increaseAllowance(buyerAddress, valueSpend)
+        .increaseAllowance(token.sellerAddress, valueSpend)
         .encodeABI();
     else throw new Error("Function is not valid");
 
@@ -241,16 +241,21 @@ export async function finishAuction(
 
 
     const data = await marketplace_contract.methods.finishAuction(auctionData, bidderSig, ownerApprovedSig).encodeABI();
+    console.log("..........")
+    console.log(auctionData)
+    console.log(bidderSig)
+    console.log( ownerApprovedSig)
+    console.log("..........")
 
     const transactionObjectFinishAuction = {
-        from: buyerAddress,
+        from: sellerAddress,
         to: SETTLER_CONTRACT_MARKETPLACE_ADDRESS,
         gas: gasLimit,
         gasPrice: await web3.eth.getGasPrice(),
         data: data
     };
     console.log("transactionObjectFinishAuction>", transactionObjectFinishAuction)
-    const SignedTransactionFinishAuction = await signature(transactionObjectFinishAuction, privateKeyByBuyer.privateKey)
+    const SignedTransactionFinishAuction = await signature(transactionObjectFinishAuction, privateKeyBySeller.privateKey)
     console.log("SignedTransactionFinishAuction>", SignedTransactionFinishAuction)
 
     return SignedTransactionFinishAuction.transactionHash
