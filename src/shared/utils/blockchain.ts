@@ -37,9 +37,8 @@ export async function buyToken(
     if (!privateKeyByAddress) throw new Error("this wallet not exist");
 
     const block = await web3.eth.getBlock("latest");
-    const gasLimit = Math.round(
-      Number(block.gasLimit) / block.transactions.length,
-    );
+    const gasLimit =
+      Math.round(Number(block.gasLimit) / block.transactions.length) + 100;
     const hashAproved = await AproveTransactionERC721(token, buyerAddress);
 
     let data = await erc20_contract.methods
@@ -95,13 +94,13 @@ export async function AproveTransactionERC721(
 ): Promise<any> {
   try {
     const block = await web3.eth.getBlock("latest");
-    const gasLimit = Math.round(
-      Number(block.gasLimit) / block.transactions.length,
-    );
+    const gasLimit =
+      Math.round(Number(block.gasLimit) / block.transactions.length) + 100;
     const privateKeyByAddress = PRIVAVE_KEYS.find(
       (data: any) => data.addres == token.sellerAddress,
     );
     await readContract.haveToken(token);
+
     console.log("---Aprobe token---");
     const data = await erc721_contract.methods
       .approve(buyerAddress, token.tokenID)
@@ -142,7 +141,7 @@ export async function auctions(
     const privateKeyByAddress = PRIVAVE_KEYS.find(
       (data: any) => data.addres == buyerAddress,
     );
-    console.log(privateKeyByAddress)
+    console.log(privateKeyByAddress);
     let data = "";
     if (auctionsType == 1)
       // approve
@@ -230,39 +229,47 @@ export async function finishAuction(
     const bidderSig = await readContract.signatureData(
       message,
       privateKeyByBuyer.privateKey,
-      );
+    );
 
-    const BidderHash = readContract.createBidderHash(bidderSig) 
+    const BidderHash = readContract.createBidderHash(bidderSig);
 
     const ownerApprovedSig = await readContract.signatureData(
       BidderHash,
       BidderHash,
     );
 
-
-    const data = await marketplace_contract.methods.finishAuction(auctionData, bidderSig, ownerApprovedSig).encodeABI();
-    console.log("..........")
-    console.log(auctionData)
-    console.log(bidderSig)
-    console.log( ownerApprovedSig)
-    console.log("..........")
+    const data = await marketplace_contract.methods
+      .finishAuction(auctionData, bidderSig, ownerApprovedSig)
+      .encodeABI();
+    console.log("..........");
+    console.log(auctionData);
+    console.log(bidderSig);
+    console.log(ownerApprovedSig);
+    console.log("..........");
 
     const transactionObjectFinishAuction = {
-        from: sellerAddress,
-        to: SETTLER_CONTRACT_MARKETPLACE_ADDRESS,
-        gas: gasLimit,
-        gasPrice: await web3.eth.getGasPrice(),
-        data: data
+      from: sellerAddress,
+      to: SETTLER_CONTRACT_MARKETPLACE_ADDRESS,
+      gas: gasLimit,
+      gasPrice: await web3.eth.getGasPrice(),
+      data: data,
     };
-    console.log("transactionObjectFinishAuction>", transactionObjectFinishAuction)
-    const SignedTransactionFinishAuction = await signature(transactionObjectFinishAuction, privateKeyBySeller.privateKey)
-    console.log("SignedTransactionFinishAuction>", SignedTransactionFinishAuction)
+    console.log(
+      "transactionObjectFinishAuction>",
+      transactionObjectFinishAuction,
+    );
+    const SignedTransactionFinishAuction = await signature(
+      transactionObjectFinishAuction,
+      privateKeyBySeller.privateKey,
+    );
+    console.log(
+      "SignedTransactionFinishAuction>",
+      SignedTransactionFinishAuction,
+    );
 
-    return SignedTransactionFinishAuction.transactionHash
+    return SignedTransactionFinishAuction.transactionHash;
   } catch (err: any) {
     console.log(err);
     throw new Error(err.reason || err.message || "Error to buy token");
   }
 }
-
-

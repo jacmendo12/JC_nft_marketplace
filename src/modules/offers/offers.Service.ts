@@ -19,9 +19,9 @@ export async function createOffer(req: Request, res: Response): Promise<void> {
 
     const token: any = {
       sellerAddress,
-      tokenID
-    }
-    await readContract.haveToken(token)
+      tokenID,
+    };
+    await readContract.haveToken(token);
 
     /* validate if the offer are in the list */
     const tokenFind = req.offersList.find((data) => data.tokenID == tokenID);
@@ -34,7 +34,7 @@ export async function createOffer(req: Request, res: Response): Promise<void> {
     const newOffer: Toffer = {
       id: uuidV4(),
       status: OfferStatus.Pending,
-      buyerAddress: [],
+      buyerData: [],
       ...req.body,
     };
     req.offersList.push(newOffer);

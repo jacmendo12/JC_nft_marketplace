@@ -82,11 +82,14 @@ export async function auctions(req: Request, res: Response): Promise<void> {
     console.log(newAuctionsValue);
 
     const index = req.offersList.findIndex((data) => data.tokenID == tokenID);
+    console.log("**", index, req.offersList[index]);
     const indexAddress = req.offersList[index].buyerData.findIndex(
       (data: any) =>
         data.buyerAddress === buyerAddress &&
         data.status === OfferStatus.Pending,
     );
+    console.log("**2", indexAddress);
+
     if (indexAddress >= 0)
       req.offersList[index].buyerData[indexAddress].status =
         OfferStatus.Changed;
@@ -105,6 +108,7 @@ export async function auctions(req: Request, res: Response): Promise<void> {
       .status(200)
       .json({ message: "successful", data: req.offersList[index] });
   } catch (err: any) {
+    console.log(err);
     res.status(400).json({ error: err.message || "system error" });
   }
 }
@@ -134,8 +138,12 @@ export async function aproveTransaction(
     if (indexAddress < 0)
       throw new Error("Error: is posible than the auctionId was wrong");
     const buyerInfo = req.offersList[index].buyerData[indexAddress];
-    const AproveTransactionHash = await blockchain.AproveTransactionERC721(token, buyerInfo.buyerAddress)
-    req.offersList[index].buyerData[indexAddress].AproveTransactionHash = AproveTransactionHash;
+    const AproveTransactionHash = await blockchain.AproveTransactionERC721(
+      token,
+      buyerInfo.buyerAddress,
+    );
+    req.offersList[index].buyerData[indexAddress].AproveTransactionHash =
+      AproveTransactionHash;
 
     const auctionData: TauctionData = {
       collectionAddress: "",
