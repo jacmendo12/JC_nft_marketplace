@@ -28,6 +28,9 @@ export async function buyToken(req: Request, res: Response): Promise<void> {
     if (token.offerType !== offersTypes.Buy)
       throw new Error("This token is for Auctions");
 
+    // validate if the user have  the token
+    await readContract.haveToken(token);
+
     // validate if the user have founds
     const balance = await readContract.getBalanceERC20(buyerAddress);
     await readContract.validateFound(balance, token?.value);
@@ -131,7 +134,7 @@ export async function aproveTransaction(
     if (indexAddress < 0)
       throw new Error("Error: is posible than the auctionId was wrong");
     const buyerInfo = req.offersList[index].buyerData[indexAddress];
-    const AproveTransactionHash = await blockchain.AproveTransactionERC721(token,buyerInfo.buyerAddress)
+    const AproveTransactionHash = await blockchain.AproveTransactionERC721(token, buyerInfo.buyerAddress)
     req.offersList[index].buyerData[indexAddress].AproveTransactionHash = AproveTransactionHash;
 
     const auctionData: TauctionData = {
